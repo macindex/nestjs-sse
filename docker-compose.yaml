@@ -1,16 +1,14 @@
 version: '3'
 
-service:
- app:
-   build: .
-   ports:
-    - 3000:3000
-   volumes:
-    - .:home/node/app
-   mysql:
-    image: 
-    mysql: mysql:community-server
-    
+services:
+  app:
+    build: .
+    ports:
+      - 3000:3000
+    volumes:
+      - .:/home/node/app
+  mysql:
+    image: mysql:8.0.33
     environment:
-    MYSQL_ROOT_PASSWORD: root
-    MYSQL_DATABASE: nest
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: nest
