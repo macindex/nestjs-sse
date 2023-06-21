@@ -33,7 +33,7 @@ export class ReportsService {
                 status: Status.PENDING,
             },
         });
-        this.reportsQueue.add('reports', {reportId: report.id});
+        await this.reportsQueue.add({reportId: report.id});
         return report;
     }
     async produce(reportId: number){
