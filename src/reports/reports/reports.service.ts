@@ -1,20 +1,63 @@
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
+import { Status } from '@prisma/client';
+import { Queue } from 'bull';
+import { PrismaService } from 'src/prisma/prisma/prisma.service';
+import { ReportsJobService } from '../reports-job/reports-job.service';
 
 @Injectable()
 export class ReportsService {
-    constructor(){
+    constructor(private prismaService: PrismaService, 
+        @InjectQueue('reports')
+        private reportsQueue: Queue,){
         
     }
     all(){
+        return this.prismaService.report.findMany({
+            orderBy: {  
+                createdAt: 'desc', 
+            }
+        })
+    }
+    findOne(id: number){
+        return this.prismaService.report.findUnique({
+            where: {
+                id,
+            },
+        })
 
     }
-    findOne(id: string){
-
+    async request(){
+        const report = await this.prismaService.report.create({
+            data: {
+                status: Status.PENDING,
+            },
+        });
+        this.reportsQueue.add('reports', {reportId: report.id});
+        return report;
     }
-    request(){
-
-    }
-    produce(){
-
+    async produce(reportId: number){
+        await sleep(Math.random() * 10000);
+        await this.prismaService.report.update({
+            where: {
+                id: reportId,
+            },
+            data: {
+                status: Status.PROCESSING,
+            },
+        });
+        await sleep(Math.random() * 10000);
+        const randomStatus = Math.random() > 0.5 ? Status.DONE : Status.ERROR;
+        await this.prismaService.report.update({
+            where: {
+                id: reportId,
+            },
+            data: {
+                filename: randomStatus === Status.DONE ? `report-${reportId}.pdf` : null,
+                status: randomStatus,
+            },
+        });
     }
 }
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

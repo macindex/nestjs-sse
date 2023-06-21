@@ -10,10 +10,11 @@ export class ReportsController {
     all(){
         return this.reportsService.all();
     }
-    @Post(':id')
+    @Get(':id')
     findOne(@Param('id', new ParseIntPipe()) id: number){
         return this.reportsService.findOne(id);
     }
+    @Post()
     request(){
         return this.reportsService.request();
     }
