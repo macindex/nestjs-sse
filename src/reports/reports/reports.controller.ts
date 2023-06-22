@@ -1,5 +1,6 @@
-import { Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Controller, Get, MessageEvent, Param, ParseIntPipe, Post, Sse } from '@nestjs/common';
 import { ReportsService } from './reports.service';
+import { defer, map, Observable, repeat } from 'rxjs'
 
 @Controller('reports')
 export class ReportsController {
@@ -17,5 +18,16 @@ export class ReportsController {
     @Post()
     request(){
         return this.reportsService.request();
+    }
+    @Sse(':id/events')
+    events(@Param('id', new ParseIntPipe()) id: number, ): Observable<MessageEvent>{
+        return defer(() => this.reportsService.findOne(id)).pipe(repeat({
+            delay: 1000,
+        }),
+        map((report) => ({
+            type: 'message',
+            data: report,
+        })),
+        );
     }
 }
